@@ -1,10 +1,56 @@
 # Orderly Growth Agent
 
-**Built by [OtterClaw](https://github.com/SkewCodes)**
+**An [OtterClaw](https://github.com/SkewCodes/OtterClaw) skill** — Orderly Network skills for AI agents.
 
 Autonomous growth engine for [Orderly Network](https://orderly.network) DEXs. One agent turns a launched DEX into a self-operating business — collecting metrics, diagnosing problems, executing playbooks, deploying campaigns, adjusting fees, detecting abuse, and reporting results on a daily loop.
 
-Launch a DEX with `orderly-dex-builder` in 10 minutes. Install this agent. Wake up to a growth team that never sleeps.
+Launch a DEX with `orderly-dex-builder` in 10 minutes. Install this skill. Wake up to a growth team that never sleeps.
+
+---
+
+## OtterClaw Skill Install
+
+Paste the SKILL.md link to your agent — it reads the file, installs dependencies, and gains the ability:
+
+```
+"Install this skill: https://github.com/SkewCodes/orderly-growth-agent/blob/master/SKILL.md"
+```
+
+That's it. Your agent can now run autonomous growth loops on any Orderly DEX.
+
+**Compatible agents:** OpenClaw · SeekerClaw · Starchild · Any agent that reads SKILL.md files
+
+### How It Fits in the OtterClaw Ecosystem
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         OTTERCLAW                               │
+│              One link. Paste it. Trade Orderly.                 │
+│                                                                 │
+│  ┌───────────────────┐  ┌──────────────────┐  ┌─────────────┐  │
+│  │ orderly-onboarding│  │ orderly-trader   │  │ orderly-data│  │
+│  │ Account setup     │  │ Perps trading    │  │ Market data │  │
+│  └───────────────────┘  └──────────────────┘  └─────────────┘  │
+│  ┌───────────────────┐  ┌──────────────────┐  ┌─────────────┐  │
+│  │ orderly-dex-builder│ │ orderly-vault    │  │ orderly-swap│  │
+│  │ Launch a DEX      │  │ OmniVault yield  │  │ Token swaps │  │
+│  └────────┬──────────┘  └──────────────────┘  └─────────────┘  │
+│           │                                                     │
+│           ▼                                                     │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  orderly-growth-agent  ◄── YOU ARE HERE               │     │
+│  │  Autonomous growth: 9 playbooks, 7 watchdog detectors,│     │
+│  │  fee optimization, campaigns, abuse detection          │     │
+│  └────────────────────────────────────────────────────────┘     │
+│  ┌───────────────────┐                                          │
+│  │ orderly-402       │                                          │
+│  │ 402 payments      │                                          │
+│  └───────────────────┘                                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Depends on:** `orderly-onboarding` + `orderly-dex-builder` (prerequisites)
+**Optional:** `orderly-data` · `orderly-trader` · `orderly-vault` · `orderly-402`
 
 ---
 
@@ -187,12 +233,22 @@ Daily markdown reports with volume, revenue, users, fee tiers, referrals, distri
 
 ## Quick Start
 
-### Prerequisites
+### Option A: OtterClaw Skill Install (agents)
+
+Send the SKILL.md link to any OtterClaw-compatible agent:
+
+```
+"Install this skill: https://github.com/SkewCodes/orderly-growth-agent/blob/master/SKILL.md"
+```
+
+The agent reads the skill, installs prerequisites, and starts running growth loops.
+
+### Option B: Manual Install (developers)
+
+**Prerequisites:**
 
 - Node.js >= 20
 - [Orderly CLI](https://www.npmjs.com/package/@orderly.network/cli) (`npm install -g @orderly.network/cli`)
-
-### Install
 
 ```bash
 git clone https://github.com/SkewCodes/orderly-growth-agent.git
@@ -359,19 +415,31 @@ npm run lint         # Lint
 
 ---
 
-## Companion Skills
+## OtterClaw Companion Skills
 
-| Skill | Role |
-|---|---|
-| `orderly-dex-builder` | Launch the DEX (prerequisite) |
-| `orderly-onboarding` | Builder onboarding flow |
-| `orderly-data` | Market intelligence for fee/campaign timing |
-| `orderly-trader` | Trade execution context |
-| `orderly-vault` | OmniVault yield — campaign mechanic |
-| `orderly-402` | Micropayments for premium features |
+All skills live in the [OtterClaw](https://github.com/SkewCodes/OtterClaw) repository. Install any of them by pasting the SKILL.md link to your agent.
+
+| Skill | Role | Install |
+|---|---|---|
+| [`orderly-onboarding`](https://github.com/SkewCodes/OtterClaw/blob/main/skills/orderly-onboarding/SKILL.md) | Account setup (prerequisite) | `"Install this skill: .../orderly-onboarding/SKILL.md"` |
+| [`orderly-dex-builder`](https://github.com/SkewCodes/OtterClaw/blob/main/skills/orderly-dex-builder/SKILL.md) | Launch a DEX (prerequisite) | `"Install this skill: .../orderly-dex-builder/SKILL.md"` |
+| [`orderly-trader`](https://github.com/SkewCodes/OtterClaw/blob/main/skills/orderly-trader/SKILL.md) | Perps trading | `"Install this skill: .../orderly-trader/SKILL.md"` |
+| [`orderly-data`](https://github.com/SkewCodes/OtterClaw/blob/main/skills/orderly-data/SKILL.md) | Market data & intelligence | `"Install this skill: .../orderly-data/SKILL.md"` |
+| [`orderly-vault`](https://github.com/SkewCodes/OtterClaw/blob/main/skills/orderly-vault/SKILL.md) | OmniVault yield | `"Install this skill: .../orderly-vault/SKILL.md"` |
+| [`orderly-swap`](https://github.com/SkewCodes/OtterClaw/blob/main/skills/orderly-swap/SKILL.md) | On-chain token swaps | `"Install this skill: .../orderly-swap/SKILL.md"` |
+| [`orderly-402`](https://github.com/SkewCodes/OtterClaw/blob/main/skills/orderly-402/SKILL.md) | 402 micropayments | `"Install this skill: .../orderly-402/SKILL.md"` |
+
+### Agent Distribution
+
+This skill and all OtterClaw skills are compatible with:
+
+- **OpenClaw** — 247K+ GitHub stars ecosystem
+- **SeekerClaw** — Solana mobile agent
+- **Starchild** — WOO Network agent platform
+- **ClawHub** — OpenClaw's official skill registry (5,400+ skills)
 
 ---
 
 ## License
 
-MIT — Built by [OtterClaw](https://github.com/SkewCodes)
+MIT — Part of [OtterClaw](https://github.com/SkewCodes/OtterClaw) by [SkewCodes](https://github.com/SkewCodes)
