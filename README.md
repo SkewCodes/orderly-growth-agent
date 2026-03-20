@@ -4,7 +4,7 @@
 
 Autonomous growth engine for [Orderly Network](https://orderly.network) DEXs. Runs a daily loop that collects metrics, diagnoses problems, executes playbooks, deploys campaigns, adjusts fees, detects abuse, and reports results.
 
-Launch a DEX. Install this skill. Wake up to a growth team that never sleeps.
+> **Status: Pre-production.** The architecture, playbooks, watchdog detectors, and economics engine are built and tested (101 tests passing). No live builder has run this against real volume yet. Dry-run mode is the default — the agent proposes actions and generates reports without touching any API. See [Operator Control](#operator-control) for the path from dry-run to live.
 
 ---
 
@@ -35,6 +35,28 @@ Requires Node.js >= 20 and [Orderly CLI](https://www.npmjs.com/package/@orderly.
 
 ---
 
+## Operator Control
+
+The agent is designed for progressive trust. Every layer defaults to off or read-only.
+
+**Three gates, each independent:**
+
+| Gate | Default | What it controls | Config |
+|------|---------|-----------------|--------|
+| **Agent dry-run** | `true` | All playbook actions (fee changes, referral codes, campaigns) | `dryRun: false` |
+| **Watchdog dry-run** | `true` | Abuse detection enforcement actions | `watchdog.dryRun: false` |
+| **Watchdog enforcement** | `false` | Automated account restrictions | `watchdog.enforcementEnabled: true` |
+
+**Recommended path to live:**
+
+1. **Week 1-2:** Run `dryRun: true` (default). The agent collects metrics, diagnoses problems, selects playbooks, and generates reports — but writes nothing. Read the daily scorecard. Verify the agent's recommendations make sense for your DEX.
+2. **Week 3:** Enable `dryRun: false` with `maxPlaybooksPerCycle: 1`. The agent executes one playbook per run. Review the audit log (`audit.jsonl`) after each cycle.
+3. **Ongoing:** Increase `maxPlaybooksPerCycle` to 2. Enable `watchdog.enabled: true` (still dry-run). Review watchdog reports before enabling enforcement.
+
+**The agent does not ask for approval mid-run.** It either executes (live mode) or logs what it would do (dry-run mode). The operator controls scope through configuration. Every action is logged to `audit.jsonl` for post-hoc review.
+
+---
+
 ## How It Works
 
 ```
@@ -47,7 +69,7 @@ MEASURE → WATCHDOG → COLLECT → DIAGNOSE → DECIDE → ACT → REPORT → 
 | **Watchdog** | 7 abuse detectors, 29 heuristics, risk scoring, tiered enforcement |
 | **Collect** | Volume, revenue, users, referrals, staking, campaigns, tier progression |
 | **Diagnose** | 10 diagnostic codes with severity and priority ranking |
-| **Decide** | Select up to N playbooks ranked by estimated impact |
+| **Decide** | Select up to N playbooks ranked by priority — no conflicting playbooks in same cycle |
 | **Act** | Execute playbooks: fee changes, referral codes, campaigns, quests |
 | **Report** | Markdown scorecard with actions taken, tier advisory, alerts |
 
@@ -78,8 +100,8 @@ A Diamond builder earns **2x the margin** of a Public builder on identical volum
 | Playbook | Trigger | Actions |
 |----------|---------|---------|
 | **TIER_PUSH** | Near next tier threshold | Fee reduction + referral codes + volume race + staking advisory |
-| **DISTRIBUTOR_GROWTH** | Low invitee count | Recruitment referral + tier assignment advisory + revenue projections |
-| **INVITEE_SUPPORT** | Invitee volume declining | Tier assignment + joint campaign advisory + growth agent sharing |
+| **DISTRIBUTOR_GROWTH** | Low invitee count | Advisory: revenue projections, tier assignment offers, target segments |
+| **INVITEE_SUPPORT** | Invitee volume declining | Advisory: tier assignment + joint campaign recommendations |
 | **VOLUME_RECOVERY** | 7d vol < 70% of 30d avg | Comeback code + volume blitz + streak quests |
 | **FEE_OPTIMIZATION** | Revenue compression | Re-tier all users across 6 tiers with staking bonuses |
 | **RETENTION_SIEGE** | Churn > 30% | Comeback + streak + referral quests + dormant segmentation |
@@ -87,11 +109,21 @@ A Diamond builder earns **2x the margin** of a Public builder on identical volum
 | **ACQUISITION_PUSH** | New users below target | Onboarding sprint + new trader leaderboard |
 | **REFERRAL_OPTIMIZE** | Low conversion | Audit codes, deactivate underperformers, upgrade KOLs |
 
+### Conflict Resolution
+
+The DECIDE phase runs at most `maxPlaybooksPerCycle` playbooks (default: 2). When multiple diagnostics fire, strict priority ordering resolves conflicts:
+
+1. Diagnoses are sorted by priority (TIER_PUSH=1 highest, CAMPAIGN_FATIGUE=7 lowest), then by severity (critical > warning > info).
+2. Each diagnosis suggests playbooks. The first N non-duplicate, non-recently-run playbooks are selected.
+3. A playbook that ran last cycle and hasn't been measured yet is skipped — no stacking the same action.
+
+**Example:** If VOLUME_RECOVERY (priority 3) wants to cut fees and FEE_OPTIMIZATION (priority 5) wants to raise them, VOLUME_RECOVERY wins. FEE_OPTIMIZATION is queued for the next cycle after volume recovers. They never run in the same cycle because the max is 2 and higher-priority diagnostics fill the slots first.
+
 ---
 
 ## Watchdog
 
-7 detectors running 29 heuristics with per-account risk scoring (0-100) and tiered enforcement (CLEAN → MONITOR → RESTRICT → PENALIZE → ESCALATE).
+7 detectors running 29 heuristics with per-account risk scoring (0-100).
 
 | Detector | Heuristics | What It Catches |
 |----------|-----------|-----------------|
@@ -104,6 +136,25 @@ A Diamond builder earns **2x the margin** of a Public builder on identical volum
 | **Staking Tier Gaming** | 2 | Stake-unstake cycling, flash staking |
 
 All detectors share a pre-computed `ScanDataIndex` — counterparty volume maps, funding clusters, referral graphs, and trade groupings built once per cycle.
+
+### False Positive Safety
+
+Flagging a real whale as a wash trader is a builder-killing mistake. The watchdog is designed with multiple safety layers:
+
+1. **Triple-off by default.** `watchdog.enabled: false`, `watchdog.dryRun: true`, `watchdog.enforcementEnabled: false`. You must flip three switches before the watchdog can take any automated action.
+2. **Graduated enforcement.** Risk scores map to tiers with escalating responses — a borderline account (score 21-40) is only flagged in the report with increased monitoring. No restrictions happen until score 41+.
+
+| Score | Tier | What Happens |
+|-------|------|-------------|
+| 0-20 | CLEAN | Nothing |
+| 21-40 | MONITOR | Flagged in report, increased monitoring |
+| 41-60 | RESTRICT | Campaign exclusion, tier promotions blocked |
+| 61-80 | PENALIZE | Fee tier reverted to default, referral codes deactivated |
+| 81-100 | ESCALATE | Operator manual review required, flagged for Orderly review |
+
+3. **Allowlist.** `watchdog.allowlist` lets you exclude known-good accounts (VIPs, market makers, your own test accounts) by account ID. Allowlisted accounts are never scanned.
+4. **Threshold and weight overrides.** `watchdog.thresholdOverrides` and `watchdog.weightOverrides` let you tune sensitivity per heuristic. If the wash trading detector is too aggressive for your market's normal trading patterns, raise its thresholds.
+5. **ESCALATE requires human review.** The highest tier never takes autonomous action beyond flagging — it generates an alert for the operator and Orderly team.
 
 ---
 
@@ -146,6 +197,8 @@ The agent tracks tier progression as the highest-priority strategic action — c
 Recruit builders → their volume adds to YOUR aggregate → higher tier → lower base fee → bigger spread on ALL invitee volume → more revenue → attract MORE builders → repeat.
 
 Two revenue streams compound: DEX user fees (margin above base) + distributor spread on invitee volume. At Gold+, assign favorable tier pricing to make your offer more competitive.
+
+**What the agent actually does:** The DISTRIBUTOR_GROWTH playbook is **advisory, not outreach**. It does not cold-message anyone. It calculates how many invitees at what volume would close your tier gap, estimates per-invitee revenue at your current tier spread, recommends which tier to assign invitees, identifies target segments (communities, migrating projects, AI agent developers), and creates a referral code. The operator takes those numbers and does the recruiting. The agent provides the math — the human provides the relationships.
 
 ---
 
