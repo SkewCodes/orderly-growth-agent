@@ -35,14 +35,6 @@ requires:
       command: npm install @orderly-social/sdk-react @orderly-social/sdk-widgets
       bins: []
       label: Install Orderly Social SDK (React + Widgets — optional, for frontend integration)
-dependencies:
-  - orderly-onboarding
-  - orderly-dex-builder
-optional_dependencies:
-  - orderly-data
-  - orderly-trader
-  - orderly-vault
-  - orderly-402
 ---
 
 # Orderly Growth Agent
@@ -50,6 +42,9 @@ optional_dependencies:
 One skill. Autonomous growth for any Orderly Network DEX.
 
 This agent runs a daily loop: pull metrics, diagnose problems, execute playbooks, deploy campaigns, adjust fees, and report results. A builder launches a DEX via `orderly-dex-builder` in 10 minutes, installs this skill, and wakes up to a growth team that never sleeps.
+
+**Required skills:** `orderly-onboarding`, `orderly-dex-builder`
+**Optional skills:** `orderly-data`, `orderly-trader`, `orderly-vault`, `orderly-402`
 
 **Why this exists:** Orderly builders keep 100% of fees above the base fee. That base fee drops from 3 bps to 1 bps as your volume and $ORDER staking increase through the Builder Staking Programme. At Diamond tier, a builder paying 1 bps base who charges users 5 bps keeps 4 bps per trade. On Hyperliquid, a HIP-3 deployer keeps ~50% of their fee scale — with less control, no campaign infrastructure, and no per-user fee management. This skill maximizes the Orderly advantage at every tier.
 
